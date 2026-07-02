@@ -47,7 +47,7 @@ export const ProfileBentoCard = memo(function ProfileBentoCard({
       transition={{ delay: index * 0.04, duration: 0.35, ease: "easeOut" }}
       className={[
         "group relative flex flex-col rounded-2xl overflow-hidden text-left",
-        "glass-card platform-glow cursor-pointer",
+        "glass-card platform-glow",
         "hover:-translate-y-1 transition-transform duration-300",
         index % 5 === 0 ? "sm:col-span-2" : "",
       ].join(" ")}

@@ -47,7 +47,7 @@ export const ProfileCard = memo(function ProfileCard({
           handleNavigate();
         }
       }}
-      className="group flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-2xl glass-card hover:-translate-y-0.5 transition-all duration-200 cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-border)]"
+      className="group flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-2xl glass-card hover:-translate-y-0.5 transition-all duration-200 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-border)]"
       aria-label={`View profile for ${profile.fullname}`}
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">

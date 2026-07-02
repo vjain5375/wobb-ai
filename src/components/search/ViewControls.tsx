@@ -43,7 +43,7 @@ export function ViewControls() {
           id="sort-select"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortOption)}
-          className="text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-h)] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-border)] cursor-pointer"
+          className="text-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--text-h)] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-border)]"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt} value={opt}>
