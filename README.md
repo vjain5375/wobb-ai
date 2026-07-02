@@ -128,8 +128,8 @@ src/
 - [x] Add to List feature with persistence
 - [x] UI/UX redesign
 - [x] README with changes, libraries, assumptions, trade-offs
-- [ ] Public GitHub repository URL submitted before deadline
-- [ ] Optional: deployment URL
+- [x] Public GitHub repository URL submitted before deadline
+- [x] Optional: deployment URL
 
 ---
 
