@@ -4,7 +4,7 @@ A polished influencer search application built with **React**, **TypeScript**, *
 
 ## Live Demo
 
-_Add your deployment URL here after deploying (e.g. Vercel / Netlify)._
+https://wobb-ai-rosy.vercel.app/
 
 ## Getting Started
 
