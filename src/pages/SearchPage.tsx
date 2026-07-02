@@ -1,49 +1,57 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { Platform } from "@/types";
-import { Layout } from "@/components/Layout";
-import { PlatformFilter } from "@/components/PlatformFilter";
-import { ProfileList } from "@/components/ProfileList";
+import { Layout } from "@/components/layout/Layout";
+import { PlatformFilter } from "@/components/search/PlatformFilter";
+import { ViewControls } from "@/components/search/ViewControls";
+import { ProfileList } from "@/components/profile/ProfileList";
+import { SpotlightHero } from "@/components/home/SpotlightHero";
+import { LiveTicker } from "@/components/home/LiveTicker";
 import { extractProfiles, filterProfiles } from "@/utils/dataHelpers";
+import { sortProfiles } from "@/utils/sortProfiles";
+import { useUIStore } from "@/stores/useUIStore";
 
 export function SearchPage() {
   const [platform, setPlatform] = useState<Platform>("instagram");
   const [searchQuery, setSearchQuery] = useState("");
-  const [clickCount, setClickCount] = useState(0);
+  const sortBy = useUIStore((s) => s.sortBy);
 
-  const allProfiles = extractProfiles(platform);
-  const filtered = filterProfiles(allProfiles, searchQuery);
-
-  const handleProfileClick = (username: string) => {
-    setClickCount(clickCount + 1);
-    console.log("Clicked profile:", username, "total clicks:", clickCount);
-  };
+  const allProfiles = useMemo(() => extractProfiles(platform), [platform]);
+  const filteredProfiles = useMemo(() => {
+    const filtered = filterProfiles(allProfiles, searchQuery);
+    return sortProfiles(filtered, sortBy);
+  }, [allProfiles, searchQuery, sortBy]);
 
   return (
-    <Layout title="Find Influencers">
-      <p className="text-gray-500 mb-4 text-sm">
-        Browse top creators across social platforms
-      </p>
+    <Layout
+      title="Discover Creators"
+      subtitle="Intelligence-powered roster building across every major platform"
+    >
+      <div className="space-y-5 text-left">
+        <LiveTicker />
+        <SpotlightHero />
 
-      <PlatformFilter
-        selected={platform}
-        onChange={(p) => {
-          setPlatform(p);
-          setSearchQuery("");
-        }}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
+        <PlatformFilter
+          selected={platform}
+          onChange={(nextPlatform) => {
+            setPlatform(nextPlatform);
+            setSearchQuery("");
+          }}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
 
-      <p className="text-xs text-gray-400 mb-2">
-        Showing {filtered.length} of {allProfiles.length} on {platform}
-      </p>
+        <ViewControls />
 
-      <ProfileList
-        profiles={filtered}
-        platform={platform}
-        searchQuery={searchQuery}
-        onProfileClick={handleProfileClick}
-      />
+        <p className="text-xs text-[var(--text-muted)]">
+          <span className="font-semibold text-[var(--accent)]">
+            {filteredProfiles.length}
+          </span>{" "}
+          creators · sorted by{" "}
+          <span className="capitalize">{sortBy.replace("_", " ")}</span>
+        </p>
+
+        <ProfileList profiles={filteredProfiles} platform={platform} />
+      </div>
     </Layout>
   );
 }

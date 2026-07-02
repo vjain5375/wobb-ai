@@ -1,162 +1,167 @@
-import { useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Layout } from "@/components/Layout";
-import { VerifiedBadge } from "@/components/VerifiedBadge";
-import type { FullUserProfile, ProfileDetailResponse } from "@/types";
-import { formatEngagementRate } from "@/utils/formatters";
-import { loadProfileByUsername } from "@/utils/profileLoader";
+import { ArrowLeft, ExternalLink, GitCompareArrows } from "lucide-react";
+import { Layout } from "@/components/layout/Layout";
+import { Avatar } from "@/components/ui/Avatar";
+import { PlatformBadge } from "@/components/ui/PlatformBadge";
+import { Button } from "@/components/ui/Button";
+import { VerifiedBadge } from "@/components/profile/VerifiedBadge";
+import { TierBadge } from "@/components/profile/TierBadge";
+import { InfluenceRing } from "@/components/profile/InfluenceRing";
+import { ProfileStats } from "@/components/profile/ProfileStats";
+import { CreatorRadar } from "@/components/profile/CreatorRadar";
+import { SimilarCreators } from "@/components/profile/SimilarCreators";
+import { AddToListButton } from "@/components/profile/AddToListButton";
+import type { Platform } from "@/types";
+import { useProfile } from "@/hooks/useProfile";
+import { useCompareStore } from "@/stores/useCompareStore";
+import {
+  getInfluenceScore,
+  getInfluencerTier,
+  TIER_STYLES,
+} from "@/utils/influenceScore";
 
-function formatFollowersDetail(count: number) {
-  if (count >= 1000000) return (count / 1000000).toFixed(2) + "M";
-  if (count >= 1000) return (count / 1000).toFixed(1) + "K";
-  return String(count);
+function isPlatform(value: string | null): value is Platform {
+  return value === "instagram" || value === "youtube" || value === "tiktok";
 }
 
 export function ProfileDetailPage() {
   const { username } = useParams<{ username: string }>();
   const [searchParams] = useSearchParams();
-  const platform = searchParams.get("platform") || "unknown";
-  const [profileData, setProfileData] = useState<ProfileDetailResponse | null>(
-    null
-  );
-  const [loaded, setLoaded] = useState(false);
+  const platformParam = searchParams.get("platform");
+  const platform: Platform = isPlatform(platformParam) ? platformParam : "instagram";
 
-  useEffect(() => {
-    if (!username) return;
-
-    loadProfileByUsername(username).then((data) => {
-      setProfileData(data);
-      setLoaded(true);
-    });
-  }, [username]);
+  const { profile: profileData, isLoading, error } = useProfile(username);
+  const { toggleCompare, isComparing } = useCompareStore();
+  const comparing = username ? isComparing(username) : false;
 
   if (!username) {
     return (
-      <Layout>
-        <p>Invalid profile</p>
-        <Link to="/">Back</Link>
-      </Layout>
-    );
-  }
-
-  if (!loaded) {
-    return (
-      <Layout title={`@${username}`}>
-        <p className="text-gray-400">Loading...</p>
-      </Layout>
-    );
-  }
-
-  if (!profileData) {
-    return (
-      <Layout title={`@${username}`}>
-        <p className="text-red-600 mb-4">
-          Could not load profile details for {username}
-        </p>
-        <Link to="/" className="text-blue-600 underline">
-          Back to search
+      <Layout title="Invalid profile">
+        <p className="text-[var(--text-muted)] mb-4">This profile link is invalid.</p>
+        <Link to="/">
+          <Button variant="secondary">Back to discovery</Button>
         </Link>
       </Layout>
     );
   }
 
-  const user: FullUserProfile = profileData.data.user_profile;
+  if (isLoading) {
+    return (
+      <Layout title={`@${username}`}>
+        <div className="flex items-center gap-6 animate-pulse text-left">
+          <div className="w-28 h-28 rounded-full bg-[var(--surface-elevated)]" />
+          <div className="space-y-3 flex-1">
+            <div className="h-8 w-56 bg-[var(--surface-elevated)] rounded-xl" />
+            <div className="h-4 w-36 bg-[var(--surface-elevated)] rounded-lg" />
+            <div className="h-20 w-full max-w-lg bg-[var(--surface-elevated)] rounded-xl" />
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !profileData) {
+    return (
+      <Layout title={`@${username}`}>
+        <p className="text-red-400 mb-4" role="alert">
+          {error ?? `Could not load profile details for @${username}`}
+        </p>
+        <Link to="/">
+          <Button variant="secondary">Back to discovery</Button>
+        </Link>
+      </Layout>
+    );
+  }
+
+  const user = profileData.data.user_profile;
+  const score = getInfluenceScore(user);
+  const tier = getInfluencerTier(user.followers);
 
   return (
-    <Layout title={user.fullname}>
-      <Link to="/" className="text-sm text-blue-600 mb-4 inline-block">
-        ← Back to search
-      </Link>
+    <Layout title={user.fullname} subtitle={`@${user.username}`}>
+      <div className="text-left max-w-3xl">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-h)] mb-6 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-border)] rounded-lg"
+        >
+          <ArrowLeft className="w-4 h-4" aria-hidden />
+          Back to discovery
+        </Link>
 
-      <div className="flex gap-6 items-start text-left max-w-2xl mx-auto">
-        <img
-          src={user.picture}
-          className="w-24 h-24 rounded-full border"
-        />
-        <div className="flex-1">
-          <h2 className="text-xl font-bold">
-            @{user.username}
-            <VerifiedBadge verified={user.is_verified} />
-          </h2>
-          <p className="text-gray-600">{user.fullname}</p>
-          <p className="text-xs text-gray-400 mt-1">Platform: {platform}</p>
+        <div className="glass-card rounded-3xl overflow-hidden">
+          <div className="h-24 bg-gradient-to-r from-[var(--accent)]/20 via-[var(--glow-2)] to-[var(--glow-3)]" />
 
-          {user.description && (
-            <p className="mt-3 text-sm text-gray-700">{user.description}</p>
-          )}
+          <div className="px-6 pb-6 -mt-12">
+            <div className="flex flex-col sm:flex-row gap-6 items-start">
+              <Avatar
+                src={user.picture}
+                alt={`${user.fullname}'s profile picture`}
+                size="xl"
+                className="ring-4 ring-[var(--bg)]"
+              />
 
-          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <div className="border p-2 rounded">
-              <div className="text-gray-500">Followers</div>
-              <div className="font-semibold">
-                {formatFollowersDetail(user.followers)}
+              <div className="flex-1 min-w-0 space-y-4 pt-14 sm:pt-16">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h2 className="text-2xl font-extrabold text-[var(--text-h)]">
+                        @{user.username}
+                      </h2>
+                      <VerifiedBadge verified={user.is_verified} />
+                      <TierBadge followers={user.followers} />
+                      <PlatformBadge platform={platform} />
+                    </div>
+                    <p className="text-[var(--text)] text-lg">{user.fullname}</p>
+                  </div>
+                  <InfluenceRing
+                    score={score}
+                    size={72}
+                    color={TIER_STYLES[tier].ring}
+                  />
+                </div>
+
+                {user.description && (
+                  <p className="text-sm text-[var(--text)] leading-relaxed max-w-prose">
+                    {user.description}
+                  </p>
+                )}
+
+                <ProfileStats profile={user} />
+
+                <div className="flex flex-wrap gap-3 pt-2">
+                  {user.url && (
+                    <a
+                      href={user.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex"
+                    >
+                      <Button variant="secondary" size="sm">
+                        <ExternalLink className="w-4 h-4" aria-hidden />
+                        View on platform
+                      </Button>
+                    </a>
+                  )}
+                  <AddToListButton profile={user} platform={platform} />
+                  <Button
+                    variant={comparing ? "primary" : "secondary"}
+                    size="sm"
+                    onClick={() => toggleCompare(user, platform)}
+                  >
+                    <GitCompareArrows className="w-4 h-4" aria-hidden />
+                    {comparing ? "Pinned for compare" : "Pin to compare"}
+                  </Button>
+                </div>
               </div>
             </div>
-            <div className="border p-2 rounded">
-              <div className="text-gray-500">Engagement Rate</div>
-              <div className="font-semibold">
-                {user.engagement_rate !== undefined
-                  ? (user.engagement_rate * 10000).toFixed(2) + "%"
-                  : "N/A"}
-              </div>
-            </div>
-            {user.posts_count !== undefined && (
-              <div className="border p-2 rounded">
-                <div className="text-gray-500">Posts</div>
-                <div className="font-semibold">{user.posts_count}</div>
-              </div>
-            )}
-            {user.avg_likes !== undefined && (
-              <div className="border p-2 rounded">
-                <div className="text-gray-500">Avg Likes</div>
-                <div className="font-semibold">
-                  {formatFollowersDetail(user.avg_likes)}
-                </div>
-              </div>
-            )}
-            {user.avg_comments !== undefined && (
-              <div className="border p-2 rounded">
-                <div className="text-gray-500">Avg Comments</div>
-                <div className="font-semibold">{user.avg_comments}</div>
-              </div>
-            )}
-            {user.avg_views !== undefined && user.avg_views > 0 && (
-              <div className="border p-2 rounded">
-                <div className="text-gray-500">Avg Views</div>
-                <div className="font-semibold">
-                  {formatFollowersDetail(user.avg_views)}
-                </div>
-              </div>
-            )}
-            {user.engagements !== undefined && (
-              <div className="border p-2 rounded">
-                <div className="text-gray-500">Engagements</div>
-                <div className="font-semibold">
-                  {formatEngagementRate(user.engagement_rate)}
-                </div>
-              </div>
-            )}
           </div>
-
-          {user.url && (
-            <a
-              href={user.url}
-              target="_blank"
-              className="inline-block mt-4 text-blue-600 text-sm"
-            >
-              View on platform →
-            </a>
-          )}
-
-          {/* TODO: candidates must implement Add to List feature */}
-          {/* TODO: candidates must implement Add to List feature */}
-          <button
-            disabled
-            className="block mt-4 px-4 py-2 bg-gray-300 text-gray-500 rounded cursor-not-allowed"
-          >
-            Add to List
-          </button>
         </div>
+
+        <div className="grid lg:grid-cols-2 gap-6 mt-6 max-w-3xl">
+          <CreatorRadar profile={user} />
+        </div>
+
+        <SimilarCreators profile={user} platform={platform} />
       </div>
     </Layout>
   );

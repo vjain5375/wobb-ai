@@ -1,6 +1,10 @@
-# Wobb Frontend Assignment
+# Wobb Frontend Assignment — Submission
 
-A starter influencer search application built with **React**, **TypeScript**, **Vite**, and **Tailwind CSS**. This project is intentionally left in a rough-but-working state for candidates to improve.
+A polished influencer search application built with **React**, **TypeScript**, **Vite**, and **Tailwind CSS**. Browse creators across Instagram, YouTube, and TikTok, view detailed profiles, and curate a persistent shortlist.
+
+## Live Demo
+
+_Add your deployment URL here after deploying (e.g. Vercel / Netlify)._
 
 ## Getting Started
 
@@ -9,72 +13,124 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) to view the app.
+Open [http://localhost:5173](http://localhost:5173).
 
-## What's Included
+| Command         | Description              |
+| --------------- | ------------------------ |
+| `npm run dev`   | Start development server |
+| `npm run build` | Production build         |
+| `npm run lint`  | Run ESLint               |
+| `npm run preview` | Preview production build |
 
-- **Search / Dashboard** — filter influencers by platform (Instagram, YouTube, TikTok) and search by username or full name
-- **Profile Details** — click a profile to view extended data loaded from individual JSON files
-- **Routing** — `react-router-dom` with `/` (search) and `/profile/:username` (details)
+## What Changed
 
-Sample data lives in:
+### Bug Fixes
 
-- `src/assets/data/search/` — platform search results (10 profiles each)
-- `src/assets/data/profiles/` — detailed profile JSON per username
+- **Case-insensitive search** — username matching is now case-insensitive (previously only full name was).
+- **Engagement rate display** — fixed incorrect `× 10000` multiplier on the profile detail page; now uses the shared formatter (`× 100`).
+- **Engagements stat** — the "Engagements" card now shows the actual engagement count instead of reusing the engagement rate formatter.
+- **Stale state** — removed debug `clickCount` logic that used a stale closure in `setState`.
+- **Profile loading** — added error handling, request cancellation on unmount/username change, and a loading skeleton.
+- **Accessibility** — image `alt` text, keyboard navigation on profile cards, `rel="noopener noreferrer"` on external links, ARIA labels on interactive controls.
+- **Dependency conflict** — removed unused `react-beautiful-dnd` (incompatible with React 19 and never used).
 
-## How to Submit
+### UI/UX Redesign
 
-1. **Download or clone** this starter project to your machine.
-2. **Create a new repository** on your own GitHub account. Do not fork the original assignment repo — push your work to a repo you own.
-3. Complete the tasks below and push your changes to that repository.
-4. **Share the public GitHub repository URL** with us as your submission.
+- Modern layout with sticky header, responsive two-column grid (search + selected list sidebar).
+- Mobile-friendly selected list drawer with badge count.
+- Platform filter pills with platform-specific accent colors.
+- Card-based profile list with hover/focus states and empty states.
+- Redesigned profile detail page with stat grid and skeleton loading.
+- Light/dark mode support via CSS custom properties.
+- Subtle slide-up animation for the mobile list panel (respects `prefers-reduced-motion`).
 
-### Deadline (strict)
+### State Management (Zustand)
 
-- **Due:** **2 July 2026, 2:00 PM IST** (Indian Standard Time, UTC+5:30)
-- **Any git commits made after this deadline will disqualify your submission.** We will only consider the repository state as of the deadline; late commits will not be reviewed.
-- Make sure your final work is pushed **before** the cutoff.
+Replaced the starter's implicit/local state approach with a **Zustand** store (`src/stores/useSelectedListStore.ts`) using the `persist` middleware. Selected profiles survive page refresh via `localStorage`.
 
-## AI Usage
+### "Add to List" Feature
 
-You may use any AI tools (Cursor, ChatGPT, Claude, GitHub Copilot, etc.). We are evaluating your final solution and engineering decisions.
+- Add profiles from search cards or the profile detail page.
+- Duplicate prevention by username.
+- Visual feedback: "In List", "Added!", or "Already added".
+- Selected list panel shows avatar, platform badge, follower count, and remove actions.
+- "Clear all" to reset the list.
 
-## Your Tasks
+### Code Quality & Structure
 
-Complete the following as part of your submission:
+```
+src/
+├── components/
+│   ├── layout/       # App shell
+│   ├── profile/      # Profile cards, stats, add button
+│   ├── search/       # Platform filter & search input
+│   ├── selected/     # Selected list panel
+│   └── ui/           # Reusable Button, Input, Avatar, badges
+├── hooks/            # useProfile
+├── pages/            # Route-level components
+├── stores/           # Zustand stores
+├── types/            # Shared TypeScript types
+└── utils/            # Data helpers, formatters, profile loader
+```
 
-1. **Find and fix all bugs and quality issues** — the codebase contains intentional bugs and quality issues. Identify and resolve them.
+- Consolidated duplicate follower-formatting logic into `utils/formatters.ts`.
+- Extracted `ProfileStats`, `AddToListButton`, and `useProfile` for reuse and clarity.
+- Proper TypeScript throughout with platform type guards.
 
-2. **Completely redesign the UI/UX** — replace the basic layout with a polished, modern interface. Focus on usability, visual hierarchy, and delight.
+### Performance
 
-3. **Replace React Context with Zustand** — when you implement state management for the selected list, use [Zustand](https://github.com/pmndrs/zustand) instead of React Context.
+- `useMemo` for filtered profile lists on the search page.
+- `memo` on `ProfileCard`, `ProfileList`, `SelectedListPanel`, and `AddToListButton`.
+- Zustand selectors and `useShallow` to minimize re-renders in the selected list panel.
+- Lazy-loaded profile images.
 
-4. **Implement "Select profile & Add to List"** — the disabled "Add to List" button is a stub. Build the full feature:
-   - Select / add profiles to a persistent list
-   - View and manage the selected list
-   - Handle duplicates appropriately
+## Libraries Added
 
-5. **Improve code quality and project structure** — refactor as needed, add proper types, and follow React best practices.
+| Library        | Purpose                                      |
+| -------------- | -------------------------------------------- |
+| `zustand`      | Global state + localStorage persistence      |
+| `lucide-react` | Lightweight, accessible icons                |
 
-6. **Optimize performance** — apply sensible optimizations where appropriate.
+## Libraries Removed
 
-7. **Use any libraries you need** — you are not limited to the current stack. Choose tools that help you deliver a great result (UI kits, state managers, testing libraries, etc.).
+| Library               | Reason                                           |
+| --------------------- | ------------------------------------------------ |
+| `react-beautiful-dnd` | Unused, deprecated, incompatible with React 19   |
 
-## Scripts
+## Assumptions
 
-| Command        | Description              |
-| -------------- | ------------------------ |
-| `npm run dev`  | Start development server |
-| `npm run build`| Production build         |
-| `npm run lint` | Run ESLint               |
+- Profiles are uniquely identified by **username** for duplicate detection (not `user_id`).
+- When a profile detail page is opened without a valid `?platform=` query param, **Instagram** is used as the default platform for list metadata.
+- Only usernames with a matching JSON file in `src/assets/data/profiles/` have detail pages; others show a friendly error.
+- Selected list persistence uses `localStorage` key `wobb-selected-profiles`.
 
-## Submission Notes
+## Trade-offs
 
-- Document any assumptions or trade-offs in your README
-- Ensure `npm run build` passes before submitting
-- Focus on demonstrating your judgment — not every possible feature needs to be built, but the core assignment items should be addressed thoughtfully
-- Double-check that your repo is public (or that we have access) and that the link is included in your submission
-- Please make meaningful commits throughout your work. We may review your commit history.
-- **Bonus:** Deploying the app (e.g. Vercel, Netlify, GitHub Pages) is optional but will be considered a plus — include the live URL in your submission if you do
+- **No drag-and-drop reordering** of the selected list — prioritized simplicity and persistence over ordering UX.
+- **No toast library** — inline button feedback keeps bundle size small.
+- **No data-fetching library** (React Query/SWR) — static JSON data doesn't warrant the overhead.
+- **No unit tests** — focused on core assignment deliverables; tests would be a natural next step.
 
-Good luck!
+## Remaining Improvements
+
+- Deploy to Vercel/Netlify and add the live URL above.
+- Add unit/integration tests (Vitest + React Testing Library).
+- Virtualize the profile list for very large datasets.
+- Add drag-and-drop reordering in the selected list.
+- Toast notifications for add/remove actions.
+- Route-level code splitting for profile detail chunks.
+
+## Submission Checklist
+
+- [x] `npm run build` passes
+- [x] Application runs without errors
+- [x] Zustand for state management
+- [x] Add to List feature with persistence
+- [x] UI/UX redesign
+- [x] README with changes, libraries, assumptions, trade-offs
+- [ ] Public GitHub repository URL submitted before deadline
+- [ ] Optional: deployment URL
+
+---
+
+Built for the Wobb Frontend Assignment. Good luck with your review! 🚀
